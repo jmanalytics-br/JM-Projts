@@ -1,6 +1,3 @@
-bash
-
-cat > /home/claude/site_fixed.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -551,7 +548,6 @@ cat > /home/claude/site_fixed.html << 'HTMLEOF'
 <section id="hero">
   <canvas id="hero-canvas"></canvas>
   <div class="hero-inner">
-    <!-- LEFT: copy — texto estático, sem typewriter -->
     <div class="hero-content">
       <div class="hero-badge">Tecnologia que entrega resultado</div>
       <h1 class="hero-title">
@@ -563,8 +559,6 @@ cat > /home/claude/site_fixed.html << 'HTMLEOF'
         <a href="#contact" class="btn-outline">Fale Comigo</a>
       </div>
     </div>
-
-    <!-- RIGHT: growth chart — estático, sem animação de entrada -->
     <div class="hero-chart-panel">
       <div class="growth-chart-box">
         <div class="chart-header">
@@ -602,7 +596,6 @@ cat > /home/claude/site_fixed.html << 'HTMLEOF'
       </div>
     </div>
   </div>
-
   <div class="hero-scroll">
     <div class="hero-scroll-line"></div>
     <span>SCROLL</span>
@@ -684,9 +677,9 @@ cat > /home/claude/site_fixed.html << 'HTMLEOF'
 <div class="video-modal" id="video-modal">
   <div class="video-modal-inner">
     <button class="video-modal-close" onclick="closeVideo()">✕</button>
-    
     <video id="modal-video" controls autoplay playsinline preload="metadata">
-      <source src="./videos/automacaoia.mp4" type="video/mp4">
+      <source src="comIA.mp4" type="video/mp4">
+      Seu navegador não suporta reprodução de vídeo.
     </video>
   </div>
 </div>
@@ -847,22 +840,20 @@ cat > /home/claude/site_fixed.html << 'HTMLEOF'
 </footer>
 
 <script>
-
-  function openVideo() {
-  document.getElementById('video-modal').style.display = 'flex';
+// ─── VIDEO MODAL (ÚNICA DEFINIÇÃO - CORRIGIDA) ───
+function openVideo() {
+  const modal = document.getElementById('video-modal');
   const video = document.getElementById('modal-video');
-  video.play().catch(() => console.log('Autoplay bloqueado pelo navegador'));
+  modal.classList.add('open');
+  video.play().catch(err => console.log('Play bloqueado:', err));
 }
-
 function closeVideo() {
   const modal = document.getElementById('video-modal');
   const video = document.getElementById('modal-video');
   video.pause();
   video.currentTime = 0;
-  modal.style.display = 'none';
+  modal.classList.remove('open');
 }
-
-// Fecha ao clicar fora do player
 document.getElementById('video-modal').addEventListener('click', function(e) {
   if (e.target === this) closeVideo();
 });
@@ -887,10 +878,7 @@ document.querySelectorAll('.mobile-nav-link').forEach(a => {
   if (!canvas || window.innerWidth <= 768) { if(canvas) canvas.style.display='none'; return; }
   const ctx = canvas.getContext('2d');
   let W, H, pts = [];
-  function resize() {
-    W = canvas.width = canvas.offsetWidth;
-    H = canvas.height = canvas.offsetHeight;
-  }
+  function resize() { W = canvas.width = canvas.offsetWidth; H = canvas.height = canvas.offsetHeight; }
   resize();
   window.addEventListener('resize', resize);
   for (let i = 0; i < 80; i++) {
@@ -924,11 +912,10 @@ document.querySelectorAll('.mobile-nav-link').forEach(a => {
   draw();
 })();
 
-// ─── GROWTH CHART — ESTÁTICO, SEM ANIMAÇÃO ───
+// ─── GROWTH CHART ───
 (function() {
   const canvas = document.getElementById('growthChart');
   if (!canvas) return;
-
   const dpr = window.devicePixelRatio || 1;
   function setSize() {
     const rect = canvas.parentElement.getBoundingClientRect();
@@ -938,166 +925,39 @@ document.querySelectorAll('.mobile-nav-link').forEach(a => {
     canvas.style.height = '260px';
   }
   setSize();
-
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
-
   function drawFull() {
-    const W = canvas.width / dpr;
-    const H = canvas.height / dpr;
+    const W = canvas.width / dpr, H = canvas.height / dpr;
     const PAD = { top: 16, right: 60, bottom: 36, left: 48 };
-    const CW = W - PAD.left - PAD.right;
-    const CH = H - PAD.top - PAD.bottom;
-
-    // Dados: empresa com tecnologia cresce muito mais (curva exponencial)
-    // Empresa sem tecnologia: crescimento lento e linear
-    const years = [0, 1, 2, 3, 4, 5];
-    const techData   = [100, 155, 230, 318, 392, 540]; // exponencial forte
-    const noTechData = [100, 108, 116, 124, 133, 142]; // crescimento lento
-
-    const maxVal = 560;
-    const minVal = 80;
-
-    function xPos(i) { return PAD.left + (i / (years.length - 1)) * CW; }
-    function yPos(v) { return PAD.top + CH - ((v - minVal) / (maxVal - minVal)) * CH; }
-
-    ctx.clearRect(0, 0, W, H);
-
-    // ── Grid ──
-    const gridLines = [100, 200, 300, 400, 500];
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-    ctx.lineWidth = 1;
-    gridLines.forEach(v => {
-      const y = yPos(v);
-      ctx.beginPath();
-      ctx.moveTo(PAD.left, y);
-      ctx.lineTo(PAD.left + CW, y);
-      ctx.stroke();
-    });
-
-    // ── Y labels ──
-    ctx.fillStyle = 'rgba(136,146,164,0.8)';
-    ctx.font = '10px Sora, sans-serif';
-    ctx.textAlign = 'right';
-    gridLines.forEach(v => {
-      ctx.fillText(v + '%', PAD.left - 6, yPos(v) + 4);
-    });
-
-    // ── X labels ──
+    const CW = W - PAD.left - PAD.right, CH = H - PAD.top - PAD.bottom;
+    const years = [0,1,2,3,4,5];
+    const techData = [100,155,230,318,392,540];
+    const noTechData = [100,108,116,124,133,142];
+    const maxVal = 560, minVal = 80;
+    function xPos(i) { return PAD.left + (i / (years.length-1)) * CW; }
+    function yPos(v) { return PAD.top + CH - ((v-minVal)/(maxVal-minVal)) * CH; }
+    ctx.clearRect(0,0,W,H);
+    const gridLines = [100,200,300,400,500];
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+    gridLines.forEach(v => { const y = yPos(v); ctx.beginPath(); ctx.moveTo(PAD.left,y); ctx.lineTo(PAD.left+CW,y); ctx.stroke(); });
+    ctx.fillStyle = 'rgba(136,146,164,0.8)'; ctx.font = '10px Sora, sans-serif'; ctx.textAlign = 'right';
+    gridLines.forEach(v => ctx.fillText(v+'%', PAD.left-6, yPos(v)+4));
     ctx.textAlign = 'center';
-    years.forEach((yr, i) => {
-      ctx.fillStyle = 'rgba(136,146,164,0.8)';
-      ctx.fillText('Ano ' + yr, xPos(i), H - 8);
-    });
-
-    // ── Fill areas ──
-    function drawFill(data, color) {
-      ctx.save();
-      ctx.globalAlpha = 0.10;
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.moveTo(xPos(0), yPos(data[0]));
-      for (let i = 1; i < data.length; i++) ctx.lineTo(xPos(i), yPos(data[i]));
-      ctx.lineTo(xPos(data.length - 1), yPos(minVal));
-      ctx.lineTo(xPos(0), yPos(minVal));
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
-
-    // ── Draw lines ──
-    function drawLine(data, color, glowColor) {
-      ctx.save();
-      ctx.shadowColor = glowColor;
-      ctx.shadowBlur = 16;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
-      ctx.lineJoin = 'round';
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      data.forEach((v, i) => i === 0 ? ctx.moveTo(xPos(i), yPos(v)) : ctx.lineTo(xPos(i), yPos(v)));
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    // ── Dots on every data point ──
-    function drawDots(data, color) {
-      data.forEach((v, i) => {
-        ctx.save();
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(xPos(i), yPos(v), 4.5, 0, Math.PI*2);
-        ctx.fillStyle = color;
-        ctx.fill();
-        // inner white dot
-        ctx.beginPath();
-        ctx.arc(xPos(i), yPos(v), 2, 0, Math.PI*2);
-        ctx.fillStyle = '#0A0F1E';
-        ctx.fill();
-        ctx.restore();
-      });
-    }
-
-    // Draw no-tech first (behind)
-    drawFill(noTechData, '#ff6b6b');
-    drawLine(noTechData, '#ff6b6b', 'rgba(255,107,107,0.5)');
-    drawDots(noTechData, '#ff6b6b');
-
-    // Draw tech on top
-    drawFill(techData, '#00D4FF');
-    drawLine(techData, '#00D4FF', 'rgba(0,212,255,0.6)');
-    drawDots(techData, '#00D4FF');
-
-    // ── End-of-line labels ──
-    const lastIdx = years.length - 1;
-
-    // Tech label
-    ctx.save();
-    ctx.fillStyle = '#00D4FF';
-    ctx.font = 'bold 12px Sora, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('+440%', xPos(lastIdx) + 8, yPos(techData[lastIdx]) + 5);
-    ctx.restore();
-
-    // No-tech label
-    ctx.save();
-    ctx.fillStyle = '#ff6b6b';
-    ctx.font = 'bold 12px Sora, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('+42%', xPos(lastIdx) + 8, yPos(noTechData[lastIdx]) + 5);
-    ctx.restore();
-
-    // ── Divergence annotation arrow ──
-    const midX = xPos(3);
-    const techY = yPos(techData[3]);
-    const noTechY = yPos(noTechData[3]);
-    const midY = (techY + noTechY) / 2;
-
-    ctx.save();
-    ctx.strokeStyle = 'rgba(74,222,128,0.6)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3,3]);
-    ctx.beginPath();
-    ctx.moveTo(midX + 10, techY);
-    ctx.lineTo(midX + 10, noTechY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(74,222,128,0.9)';
-    ctx.font = 'bold 10px Sora, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('×10', midX + 14, midY + 4);
-    ctx.restore();
+    years.forEach((yr,i) => { ctx.fillStyle = 'rgba(136,146,164,0.8)'; ctx.fillText('Ano '+yr, xPos(i), H-8); });
+    function drawFill(data,color) { ctx.save(); ctx.globalAlpha=0.10; ctx.fillStyle=color; ctx.beginPath(); ctx.moveTo(xPos(0),yPos(data[0])); for(let i=1;i<data.length;i++) ctx.lineTo(xPos(i),yPos(data[i])); ctx.lineTo(xPos(data.length-1),yPos(minVal)); ctx.lineTo(xPos(0),yPos(minVal)); ctx.closePath(); ctx.fill(); ctx.restore(); }
+    function drawLine(data,color,glow) { ctx.save(); ctx.shadowColor=glow; ctx.shadowBlur=16; ctx.strokeStyle=color; ctx.lineWidth=3; ctx.lineJoin='round'; ctx.lineCap='round'; ctx.beginPath(); data.forEach((v,i)=>i===0?ctx.moveTo(xPos(i),yPos(v)):ctx.lineTo(xPos(i),yPos(v))); ctx.stroke(); ctx.restore(); }
+    function drawDots(data,color) { data.forEach((v,i)=>{ ctx.save(); ctx.shadowColor=color; ctx.shadowBlur=10; ctx.beginPath(); ctx.arc(xPos(i),yPos(v),4.5,0,Math.PI*2); ctx.fillStyle=color; ctx.fill(); ctx.beginPath(); ctx.arc(xPos(i),yPos(v),2,0,Math.PI*2); ctx.fillStyle='#0A0F1E'; ctx.fill(); ctx.restore(); }); }
+    drawFill(noTechData,'#ff6b6b'); drawLine(noTechData,'#ff6b6b','rgba(255,107,107,0.5)'); drawDots(noTechData,'#ff6b6b');
+    drawFill(techData,'#00D4FF'); drawLine(techData,'#00D4FF','rgba(0,212,255,0.6)'); drawDots(techData,'#00D4FF');
+    const lastIdx = years.length-1;
+    ctx.save(); ctx.fillStyle='#00D4FF'; ctx.font='bold 12px Sora, sans-serif'; ctx.textAlign='left'; ctx.fillText('+440%', xPos(lastIdx)+8, yPos(techData[lastIdx])+5); ctx.restore();
+    ctx.save(); ctx.fillStyle='#ff6b6b'; ctx.font='bold 12px Sora, sans-serif'; ctx.textAlign='left'; ctx.fillText('+42%', xPos(lastIdx)+8, yPos(noTechData[lastIdx])+5); ctx.restore();
+    const midX = xPos(3), techY = yPos(techData[3]), noTechY = yPos(noTechData[3]), midY = (techY+noTechY)/2;
+    ctx.save(); ctx.strokeStyle='rgba(74,222,128,0.6)'; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(midX+10,techY); ctx.lineTo(midX+10,noTechY); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle='rgba(74,222,128,0.9)'; ctx.font='bold 10px Sora, sans-serif'; ctx.textAlign='left'; ctx.fillText('×10', midX+14, midY+4); ctx.restore();
   }
-
   drawFull();
-
-  window.addEventListener('resize', () => {
-    setSize();
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.scale(dpr, dpr);
-    drawFull();
-  });
+  window.addEventListener('resize', () => { setSize(); ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr,dpr); drawFull(); });
 })();
 
 // ─── SCROLL REVEAL ───
@@ -1112,15 +972,12 @@ const counters = document.querySelectorAll('.number-value[data-target]');
 const cio = new IntersectionObserver((entries) => {
   entries.forEach(e => {
     if (!e.isIntersecting) return;
-    const el = e.target;
-    const target = +el.dataset.target;
-    const prefix = el.dataset.prefix || '';
-    const suffix = el.dataset.suffix || '';
+    const el = e.target, target = +el.dataset.target;
+    const prefix = el.dataset.prefix || '', suffix = el.dataset.suffix || '';
     const dur = 1800, steps = 50, inc = target / steps;
     let cur = 0, count = 0;
     const timer = setInterval(() => {
-      count++;
-      cur = count < steps ? Math.round(inc * count) : target;
+      count++; cur = count < steps ? Math.round(inc * count) : target;
       el.textContent = prefix + cur + suffix;
       if (count >= steps) clearInterval(timer);
     }, dur / steps);
@@ -1137,7 +994,6 @@ const cards = track.querySelectorAll('.testimonial-card');
 const total = cards.length;
 const perView = () => window.innerWidth < 900 ? 1 : 3;
 const maxSlide = () => total - perView();
-
 function buildDots() {
   controlsEl.innerHTML = '';
   const n = maxSlide() + 1;
@@ -1157,8 +1013,7 @@ function goTo(i) {
 function next() { goTo(currentSlide >= maxSlide() ? 0 : currentSlide + 1); }
 function startAuto() { autoplay = setInterval(next, 3800); }
 function stopAuto() { clearInterval(autoplay); }
-buildDots();
-startAuto();
+buildDots(); startAuto();
 track.parentElement.addEventListener('mouseenter', stopAuto);
 track.parentElement.addEventListener('mouseleave', startAuto);
 track.addEventListener('touchstart', e => { const startX = e.touches[0].clientX; stopAuto();
@@ -1169,13 +1024,6 @@ track.addEventListener('touchstart', e => { const startX = e.touches[0].clientX;
   });
 }, {passive:true});
 window.addEventListener('resize', () => { buildDots(); goTo(0); });
-
-// ─── VIDEO MODAL ───
-function openVideo() { document.getElementById('video-modal').classList.add('open'); }
-function closeVideo() { document.getElementById('video-modal').classList.remove('open'); }
-document.getElementById('video-modal').addEventListener('click', e => {
-  if (e.target === document.getElementById('video-modal')) closeVideo();
-});
 </script>
 </body>
 </html>
